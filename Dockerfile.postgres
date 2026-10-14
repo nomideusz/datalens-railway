@@ -1,0 +1,22 @@
+FROM golang:1.25.3-alpine AS dlkeys
+WORKDIR /src
+COPY dlkeys/ .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags=-s -o /dlkeys .
+
+FROM ghcr.io/datalens-tech/datalens-postgres:16-1.3.0
+COPY --from=dlkeys /dlkeys /usr/local/bin/dlkeys
+# PGDATA one level below the mount: Railway volumes arrive with lost+found and initdb refuses a non-empty dir.
+# The demo connection uses its own non-superuser role, so charts on it can't read the DataLens metadata DBs.
+# Workbook export (meta-manager + Temporal) is left out, so their databases are skipped.
+ENV PGDATA=/var/lib/postgresql/data/pgdata \
+    POSTGRES_USER=pg-user \
+    POSTGRES_USER_DEMO=demo-user \
+    INIT_DB_META_MANAGER=false \
+    INIT_DB_TEMPORAL=false \
+    DL_KEYS="CONTROL_API_CRYPTO_KEY=crypto:fernet POSTGRES_PASSWORD_DEMO=demo-db:token"
+# The demo connection points at this service's private domain instead of the compose name "postgres",
+# and the seed waits up to 10 min (not 90 s) for US, which deploys after Postgres on Railway.
+RUN sed -i 's|POSTGRES_HOST="postgres"|POSTGRES_HOST="${RAILWAY_PRIVATE_DOMAIN:-postgres}"|; s|RETRIES="30"|RETRIES="200"|' /init/seed-demo-data.sh \
+ && grep -q 'RAILWAY_PRIVATE_DOMAIN' /init/seed-demo-data.sh && grep -q 'RETRIES="200"' /init/seed-demo-data.sh
+ENTRYPOINT ["dlkeys", "docker-entrypoint-wrapper.sh"]
+CMD ["postgres"]

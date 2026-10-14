@@ -1,0 +1,11 @@
+FROM golang:1.25.3-alpine AS dlkeys
+WORKDIR /src
+COPY dlkeys/ .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags=-s -o /dlkeys .
+
+FROM ghcr.io/datalens-tech/datalens-data-api:0.2457.0
+COPY --from=dlkeys /dlkeys /usr/local/bin/dlkeys
+ENV GUNICORN_WORKERS_COUNT=2 CACHES_ON=0 MUTATIONS_CACHES_ON=0 BI_COMPENG_PG_ON=1 \
+    RQE_FORCE_OFF=1 RQE_SECRET_KEY="" DL_CRY_ACTUAL_KEY_ID=KEY AUTH__TYPE=NATIVE AUTH__JWT_ALGORITHM=PS256 \
+    DL_KEYS="DL_CRY_KEY_VAL_ID_KEY=crypto:fernet US_MASTER_TOKEN=us-master:token US_DYNAMIC_AUTH_PRIVATE_KEY=bi:priv AUTH__JWT_KEY=auth:pub"
+ENTRYPOINT ["dlkeys", "/etc/service/dl_api/run"]

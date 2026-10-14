@@ -1,0 +1,12 @@
+FROM golang:1.25.3-alpine AS dlkeys
+WORKDIR /src
+COPY dlkeys/ .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags=-s -o /dlkeys .
+
+FROM ghcr.io/datalens-tech/datalens-auth:0.27.0
+COPY --from=dlkeys /dlkeys /usr/local/bin/dlkeys
+# Sign-up is closed: the admin creates users. Cookies stay host-only (no parent-domain cookie on up.railway.app).
+ENV APP_INSTALLATION=opensource APP_ENV=prod APP_PORT=8080 \
+    US_SURPRESS_DB_STATUS_LOGS=true SKIP_INSTALL_DB_EXTENSIONS=1 DISABLE_WILDCARD_COOKIE=true AUTH_SIGNUP_DISABLED=true \
+    DL_KEYS="MASTER_TOKEN=auth-master:token US_MASTER_TOKEN=us-master:token TOKEN_PRIVATE_KEY=auth:priv TOKEN_PUBLIC_KEY=auth:pub"
+ENTRYPOINT ["dlkeys", "/opt/app/scripts/preflight.sh"]

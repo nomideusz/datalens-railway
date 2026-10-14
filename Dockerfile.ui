@@ -1,0 +1,12 @@
+FROM golang:1.25.3-alpine AS dlkeys
+WORKDIR /src
+COPY dlkeys/ .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags=-s -o /dlkeys .
+
+FROM ghcr.io/datalens-tech/datalens-ui:0.3831.0
+COPY --from=dlkeys /dlkeys /usr/local/bin/dlkeys
+# Workbook export/import needs meta-manager + Temporal, which this template leaves out.
+ENV APP_MODE=full APP_ENV=production APP_INSTALLATION=opensource AUTH_POLICY=disabled RELEASE_VERSION=2.9.0 \
+    HC=0 YANDEX_MAP_ENABLED=0 EXPORT_WORKBOOK_ENABLED=false AUTH_ENABLED=true AUTH_SIGNUP_DISABLED=true \
+    DL_KEYS="US_MASTER_TOKEN=us-master:token US_DYNAMIC_MASTER_TOKEN_PRIVATE_KEY=ui:priv AUTH_MASTER_TOKEN=auth-master:token AUTH_TOKEN_PUBLIC_KEY=auth:pub"
+ENTRYPOINT ["dlkeys", "/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

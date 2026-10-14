@@ -1,0 +1,9 @@
+{
+  "name": "DataLens | Open-Source BI & Dashboards",
+  "short_name": "DataLens",
+  "description": "Yandex DataLens BI: charts, dashboards and SQL over your databases",
+  "category": "Analytics",
+  "image": "https://raw.githubusercontent.com/nomideusz/datalens-railway/main/icon.svg",
+  "card_desc": "DataLens: open-source business intelligence from Yandex. Connect Postgres, ClickHouse, MySQL and more, build charts and dashboards in the browser.",
+  "deploy_marker": "nomideusz/datalens-railway"
+}
