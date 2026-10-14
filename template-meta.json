@@ -5,5 +5,6 @@
   "category": "Analytics",
   "image": "https://raw.githubusercontent.com/nomideusz/datalens-railway/main/icon.svg",
   "card_desc": "DataLens: open-source business intelligence from Yandex. Connect Postgres, ClickHouse, MySQL and more, build charts and dashboards in the browser.",
-  "deploy_marker": "nomideusz/datalens-railway"
+  "deploy_marker": "nomideusz/datalens-railway",
+  "id": "8146a5cb-d3aa-4a08-9b14-acfed3899eb3"
 }

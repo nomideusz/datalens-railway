@@ -7,6 +7,10 @@
 //
 // Usage: DL_KEYS="VAR=label:kind ..." dlkeys <command> [args...]
 // kinds: priv / pub (RSA-2048 PKCS#8 / PKIX PEM), token (64 hex chars), fernet (Fernet key).
+//
+// DL_WAIT_DSN names an env var holding a Postgres URL; dlkeys waits (up to 10 min) until that
+// host accepts TCP. On a fresh deploy Railway starts the apps while Postgres is still running
+// initdb, and their migrations would burn through the restart budget.
 package main
 
 import (
@@ -19,10 +23,13 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // stream is a SHA-256 counter-mode byte stream keyed by seed and label.
@@ -140,9 +147,34 @@ func main() {
 		}
 		set(name, v)
 	}
+	if name := os.Getenv("DL_WAIT_DSN"); name != "" {
+		waitFor(os.Getenv(name))
+	}
 	path, err := exec.LookPath(os.Args[1])
 	if err != nil {
 		die("%v", err)
 	}
 	die("exec %s: %v", path, syscall.Exec(path, os.Args[1:], env))
+}
+
+func waitFor(dsn string) {
+	u, err := url.Parse(strings.Split(dsn, ",")[0])
+	if err != nil || u.Hostname() == "" {
+		die("DL_WAIT_DSN: can't parse a host from the DSN")
+	}
+	addr := u.Host
+	if u.Port() == "" {
+		addr = net.JoinHostPort(u.Hostname(), "5432")
+	}
+	for i := 0; i < 300; i++ {
+		if c, err := net.DialTimeout("tcp", addr, 2*time.Second); err == nil {
+			c.Close()
+			return
+		}
+		if i%15 == 0 {
+			fmt.Fprintf(os.Stderr, "dlkeys: waiting for %s\n", addr)
+		}
+		time.Sleep(2 * time.Second)
+	}
+	die("%s still unreachable after 10 min", addr)
 }

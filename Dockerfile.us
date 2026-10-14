@@ -5,7 +5,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags=-s -o /dlkeys .
 
 FROM ghcr.io/datalens-tech/datalens-us:1.39.0
 COPY --from=dlkeys /dlkeys /usr/local/bin/dlkeys
-ENV APP_INSTALLATION=opensource APP_ENV=prod APP_PORT=8080 \
+ENV APP_INSTALLATION=opensource APP_ENV=prod APP_PORT=8080 DL_WAIT_DSN=POSTGRES_DSN_LIST \
     US_SURPRESS_DB_STATUS_LOGS=true SKIP_INSTALL_DB_EXTENSIONS=1 USE_DEMO_DATA=0 HC=0 AUTH_ENABLED=true \
     DL_KEYS="MASTER_TOKEN=us-master:token AUTH_MASTER_TOKEN=auth-master:token BI_MASTER_TOKEN_PUBLIC_KEY_PRIMARY=bi:pub UI_MASTER_TOKEN_PUBLIC_KEY_PRIMARY=ui:pub AUTH_TOKEN_PUBLIC_KEY=auth:pub"
 ENTRYPOINT ["dlkeys", "/opt/app/scripts/preflight.sh"]

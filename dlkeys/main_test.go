@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"net"
 	"testing"
 )
 
@@ -49,4 +50,13 @@ func TestDerive(t *testing.T) {
 	if tok, _ := derive(seed, "us", "token"); len(tok) != 64 {
 		t.Fatal("token must be 64 hex chars")
 	}
+}
+
+func TestWaitFor(t *testing.T) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	waitFor("postgres://u:p@" + l.Addr().String() + "/db,postgres://other:1/db") // returns at once
 }
