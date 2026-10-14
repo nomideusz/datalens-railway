@@ -34,7 +34,7 @@ The stack is six services: DataLens (the web app, the only public one), US (Unit
 
 ### Implementation Details
 
-**Sign in.** Open the DataLens service's Railway domain and sign in as `admin` with the `DATALENS_ADMIN_PASSWORD` from the DataLens service's Variables tab. The password is applied on first boot only; change it later under Account in DataLens. The first boot takes a few minutes while the six services build and the demo data loads.
+**Sign in.** Open the DataLens service's Railway domain and sign in as `admin` with the `DATALENS_ADMIN_PASSWORD` from the DataLens service's Variables tab. The password is applied on first boot only; change it later under Account → Profile settings → Change password. The first boot takes a few minutes while the six services build and the demo data loads.
 
 **Add users.** Service settings → Users → Add user. Give people the Viewer, Editor or Admin role.
 
@@ -48,7 +48,7 @@ The stack is six services: DataLens (the web app, the only public one), US (Unit
 
 **Maps.** Map charts need a Yandex Maps API key: set `YANDEX_MAP_ENABLED=1` and `YANDEX_MAP_TOKEN` on the DataLens service.
 
-**Resources.** RAM_PLACEHOLDER
+**Resources.** About 1.25 GB of RAM at idle across the six services (DataAPI ~400 MB and ControlAPI ~360 MB are the largest, Postgres ~80 MB), more while charts run. Use the Hobby plan or above.
 
 ## Why Deploy DataLens on Railway?
 
